@@ -16,15 +16,17 @@ def generate_random_e(phi_n):
 
 
 def encrypt(M, public_key):
+    # C ≡ M^e mod n, 0 <= M < n
     M = int(M, 16)
-    if (M >= 0 and M < public_key["n"]) == False:
+    if not (M >= 0 and M < public_key["n"]):
         raise ValueError(f"Your message in integer form is {
-                         M}, which is not in the range [0, {public_key['n']})")
-    C = M ** public_key["e"] % public_key["n"]
+                         M}, which is not in the range [0, n: {public_key['n']})")
+    C = pow(M, public_key["e"], public_key["n"])
     return C
 
 
 def decrypt(C, private_key):
-    M = C ** private_key["d"] % private_key["n"]
+    # M ≡ C^d mod n
+    M = pow(C, private_key["d"], private_key["n"])
     M = hex(M)[2:].upper().rjust(16, "0")
     return M

@@ -11,18 +11,19 @@ host = socket.gethostname()
 port = 5050
 client_socket.connect((host, port))
 
-# Receive public key from server
+# Receive RSA public key from server
 serialized_public_key = client_socket.recv(1024)
 public_key = json.loads(serialized_public_key.decode('utf-8'))
 print(f"Received public key: {public_key}\n")
 
 # Initialize DES key
 key = "0000000000000ABC"
+print(f"🔑 DES key: {key}")
 
-# Encrypt DES key using RSA
+# Encrypt DES key using RSA public key
 encrypted_key = rsa.encrypt(key, public_key)
 encrypted_key = str(encrypted_key)
-print(f"Encrypted DES key: {encrypted_key}\n")
+print(f"🔐 Encrypted DES key: {encrypted_key}\n")
 
 # Send encrypted DES key to server
 client_socket.sendall(encrypted_key.encode())
@@ -31,6 +32,7 @@ client_socket.sendall(encrypted_key.encode())
 round_key = des.generate_round_key(key)
 
 while True:
+    # Get input from the user and validate it
     while True:
         message_to_send = input("Enter a message to send to the server: ")
         if message_to_send == "exit":
@@ -45,19 +47,23 @@ while True:
                 raise ValueError("please enter a 64-bit hex string\n")
             break
         except ValueError as e:
-            print("Error:", e)
+            print("❌ Error:", e)
             continue
 
+    # Encrypt the message using DES
     message_to_send = des.encrypt(message_to_send, round_key)
-    print(f"Encrypted message: {message_to_send}\n")
+    print(f"🔒 Encrypted message: {message_to_send}\n")
 
+    # Send the message to the server
     client_socket.sendall(message_to_send.encode())
 
+    # Receive data from the server
     data = client_socket.recv(1024)
     if not data:
         break
     data = data.decode('utf-8')
-    print(f"Received from server: {data}")
+    print(f"📨 Received from server: {data}")
 
+    # Decrypt the message using DES
     data = des.decrypt(data, round_key)
-    print(f"Decrypted message: {data}\n")
+    print(f"🔓 Decrypted message: {data}\n")
